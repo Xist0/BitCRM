@@ -1,70 +1,105 @@
 /* Основной контейнер */
 .lead-container {
+    width: 100%;
+    margin: auto;
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between; /* Расположение колонок рядом */
     gap: 20px;
     padding: 20px;
     background-color: #f7f9fc;
     border-radius: 8px;
-    height: 85vh;
+    min-height: 85vh;
+    height: 100%;
     overflow-y: auto;
+    flex-wrap: wrap; /* Для адаптивности */
+    box-sizing: border-box; /* Для корректного расчета ширины */
 }
 
-/* Колонка с лидами */
-.column {
+/* Колонки, которые должны вести себя адаптивно */
+.container-lead {
     flex: 1;
-    background-color: #fff;
-    border-radius: 8px;
-    padding: 15px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    min-width: 250px; /* Минимальная ширина колонки */
     display: flex;
     flex-direction: column;
+    height: 100%;
 }
 
-/* Заголовок колонки */
-.column h2 {
+/* Заголовки колонок */
+.column-header {
     font-size: 1.5rem;
     font-weight: 600;
     color: #333;
     margin-bottom: 15px;
+    text-align: center; /* Центрируем заголовок */
 }
 
-/* Карточка лида */
+/* Стили для карточек */
 .card {
-    background: #fff;
+    margin: 10px;
     border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    transition: transform 0.3s ease;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    flex-grow: 1; /* Устанавливаем карточки с одинаковой высотой */
+    height: 100%; /* Делаем высоту карточки одинаковой */
 }
 
-/* Градиент фона в зависимости от времени */
-.card.green {
-    background: linear-gradient(135deg, #00FF00, #66FF66);
+/* Карточка при наведении */
+.card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }
 
-.card.yellow {
-    background: linear-gradient(135deg, #FFEB3B, #FFCD00);
+/* Анимация плавного появления карточки */
+.card.fade-in {
+    animation: fadeIn 1s ease-out;
 }
 
-.card.red {
-    background: linear-gradient(135deg, #FF0000, #FF5733);
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-/* Текст на карточке */
+/* Сетка карточек в колонке — 3 карточки на больших экранах */
+.column {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 карточки в строке */
+    gap: 25px;
+    flex-grow: 1;
+}
+
+/* Сетка для 2 карточек на экранах до 1200px */
+@media (max-width: 1200px) {
+    .column {
+        grid-template-columns: repeat(2, 1fr); /* 2 карточки на экранах до 1200px */
+    }
+}
+
+/* Сетка для 1 карточки на экранах до 800px */
+@media (max-width: 800px) {
+    .column {
+        grid-template-columns: 1fr; /* 1 карточка на экранах до 800px */
+    }
+}
+
+/* Размеры шрифта карточек */
 .card h3 {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     font-weight: 500;
-    color: #333;
     margin-bottom: 10px;
+    color: #333;
 }
 
 .card p {
-    font-size: 1rem;
+    font-size: 0.9rem;
     color: #666;
     margin: 5px 0;
 }
@@ -73,14 +108,73 @@
     font-weight: 600;
 }
 
-/* Сетка карточек для двух рядов */
-.column {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 15px;
+/* Заголовок и значение возраста лида выделены жирным */
+.card .lead-age,
+.card .lead-age-value {
+    font-weight: 700;
 }
 
-/* Навигация по страницам - убираем */
-.pagination {
-    display: none;
+/* Поддержка уменьшения шрифта для малых экранов */
+@media (max-width: 1200px) {
+    .card h3 {
+        font-size: 1rem; /* Уменьшаем размер шрифта заголовка */
+    }
+
+    .card p {
+        font-size: 0.85rem; /* Уменьшаем размер текста в карточке */
+    }
+}
+
+@media (max-width: 800px) {
+    .card h3 {
+        font-size: 0.9rem; /* Уменьшаем размер заголовка */
+    }
+
+    .card p {
+        font-size: 0.8rem; /* Еще меньше текст */
+    }
+}
+
+/* Градиент фона для карточек в зависимости от возраста лида */
+.card.green {
+    background: linear-gradient(135deg, #4CAF50, #66FF66);
+    color: white;
+}
+
+.card.yellow {
+    background: linear-gradient(135deg, #FFEB3B, #FFCD00);
+    color: #333; /* Темный цвет текста для контраста на желтом фоне */
+}
+
+.card.red {
+    background: linear-gradient(135deg, #FF5722, #FF7043);
+    
+}
+.card.red h3, p{
+    color: #fff; 
+}
+.card.red p{
+    color: #fff; 
+}
+/* Стили для анимации загрузки */
+.loader {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
 }

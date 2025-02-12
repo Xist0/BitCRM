@@ -32,13 +32,30 @@ const LeadList = () => {
                     status: "",  // Можно добавить фильтрацию по статусу, если нужно
                 },
             });
-            setLeads(response.data);
+            const newLeads = response.data;
+            updateLeads(newLeads);
             setLoading(false);
         } catch (err) {
             console.error('Ошибка при загрузке лидов:', err);
             setError('Не удалось загрузить лидов.');
             setLoading(false);
         }
+    };
+
+    // Обновление данных о лидах с добавлением новых и удалением старых
+    const updateLeads = (newLeads) => {
+        setLeads((prevLeads) => {
+            const existingLeads = prevLeads.map((lead) => lead.ID);
+            const newLeadIDs = newLeads.map((lead) => lead.ID);
+
+            const addedLeads = newLeads.filter((lead) => !existingLeads.includes(lead.ID));
+            const removedLeads = prevLeads.filter((lead) => !newLeadIDs.includes(lead.ID));
+
+            return [
+                ...prevLeads.filter((lead) => !removedLeads.includes(lead)),
+                ...addedLeads,
+            ];
+        });
     };
 
     // Используем useEffect для загрузки данных при изменении status
@@ -55,7 +72,7 @@ const LeadList = () => {
         return () => clearInterval(interval); // очистка интервала при размонтировании компонента
     }, []);
 
-    if (loading) return <div>Загрузка...</div>;
+    if (loading) return <div className="loader"></div>;
     if (error) return <div>{error}</div>;
 
     // Фильтрация новых лидов (те, у которых статус "NEW")
@@ -75,43 +92,49 @@ const LeadList = () => {
             <h1>Статистика по лидам</h1>
 
             <div className="lead-container">
-                {/* Колонка с новыми лидами */}
-                <div className="column">
-                    <h2>Новые лиды</h2>
-                    {newLeads.map((lead) => {
-                        const ageInHours = getLeadAge(lead.DATE_CREATE);
+                <div className="container-lead">
+                    <div className="column-header">
+                        Новые лиды <span>({newLeads.length})</span>
+                    </div>
 
-                        return (
-                            <div key={lead.ID} className="card">
-                                <h3>{lead.TITLE}</h3>
-                                <p><strong>Имя:</strong> {lead.NAME}</p>
-                                <p><strong>Телефон:</strong> {lead.PHONE}</p>
-                                <p><strong>Email:</strong> {lead.EMAIL}</p>
-                                <p><strong>Дата создания:</strong> {new Date(lead.DATE_CREATE).toLocaleString()}</p>
-                                <p><strong>Возраст лида:</strong> {Math.round(ageInHours)} часов</p>
-                            </div>
-                        );
-                    })}
+
+                    <div className="column">
+                        {newLeads.map((lead) => {
+                            const ageInHours = getLeadAge(lead.DATE_CREATE);
+
+                            return (
+                                <div key={lead.ID} className="card fade-in">
+                                    <h3>{lead.TITLE}</h3>
+                                    <p><strong>Имя:</strong> {lead.NAME}</p>
+                                    <p><strong>Дата создания:</strong> {new Date(lead.DATE_CREATE).toLocaleString()}</p>
+                                    <p><strong>Возраст лида:</strong> {Math.round(ageInHours)} часов</p>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
 
-                {/* Колонка с красными лидами (старше 24 часов) */}
-                <div className="column">
-                    <h2>Сгоревшие лиды</h2>
-                    {redLeads.map((lead) => {
-                        const ageInHours = getLeadAge(lead.DATE_CREATE);
-                        const gradientClass = getLeadGradient(ageInHours);
+                <div className="container-lead">
 
-                        return (
-                            <div key={lead.ID} className={`card ${gradientClass}`}>
-                                <h3>{lead.TITLE}</h3>
-                                <p><strong>Имя:</strong> {lead.NAME}</p>
-                                <p><strong>Телефон:</strong> {lead.PHONE}</p>
-                                <p><strong>Email:</strong> {lead.EMAIL}</p>
-                                <p><strong>Дата создания:</strong> {new Date(lead.DATE_CREATE).toLocaleString()}</p>
-                                <p><strong>Возраст лида:</strong> {Math.round(ageInHours)} часов</p>
-                            </div>
-                        );
-                    })}
+                    <div className="column-header">
+                        Сгоревшие лиды <span>({redLeads.length})</span>
+                    </div>
+
+                    <div className="column">
+                        {redLeads.map((lead) => {
+                            const ageInHours = getLeadAge(lead.DATE_CREATE);
+                            const gradientClass = getLeadGradient(ageInHours);
+
+                            return (
+                                <div key={lead.ID} className={`card ${gradientClass} fade-in`}>
+                                    <h3>{lead.TITLE}</h3>
+                                    <p><strong>Имя:</strong> {lead.NAME}</p>
+                                    <p><strong>Дата создания:</strong> {new Date(lead.DATE_CREATE).toLocaleString()}</p>
+                                    <p><strong>Возраст лида:</strong> {Math.round(ageInHours)} часов</p>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
         </div>
