@@ -5,7 +5,6 @@ import './App.css';
 const App = () => {
     return (
         <div className="app">
-            <h1>Leads from Bitrix 24</h1>
             <LeadList />
         </div>
     );

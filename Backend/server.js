@@ -6,16 +6,22 @@ const port = 5000;
 
 app.use(cors());
 
-// Включаем кэш для данных
+// Кэш для лидов
 let cachedLeads = [];
 let lastFetched = null;
 const CACHE_EXPIRATION_TIME = 60 * 1000; // 1 минута
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Функция для получения данных с кэшированием
-const fetchLeads = async (requestData) => {
-    // Если данные кэша актуальны (не истекло время) - отдаем кэшированные данные
+// Статусы лидов, которые будем загружать
+const ALLOWED_STATUSES = ["NEW", "UC_4XHMA1", "UC_4XHMA2", "UC_4XHMA3"]; 
+// **NEW** - Не обработан  
+// **UC_4XHMA1** - Пропущен  
+// **UC_4XHMA2** - Перезвонить  
+// **UC_4XHMA3** - Взят в работу  
+
+// Функция для получения лидов
+const fetchLeads = async () => {
     const currentTime = Date.now();
     if (cachedLeads.length && (currentTime - lastFetched) < CACHE_EXPIRATION_TIME) {
         console.log('Возвращаем кэшированные данные');
@@ -28,7 +34,13 @@ const fetchLeads = async (requestData) => {
     const maxRetries = 5;
     const retryDelay = 5000;
 
-    const request = { ...requestData, start: 0, limit };  // Настройка запроса
+    const request = {
+        filter: { "STATUS_ID": ALLOWED_STATUSES }, // Фильтрация по нужным статусам
+        select: ["ID", "TITLE", "NAME", "DATE_CREATE", "ASSIGNED_BY_ID", "STATUS_ID"], // Выбираем нужные поля
+        order: { "DATE_CREATE": "desc" }, // Сортируем по дате создания (как в Битриксе)
+        start: 0,
+        limit
+    };
 
     const fetchData = async () => {
         for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -59,28 +71,47 @@ const fetchLeads = async (requestData) => {
 
     await fetchData();
 
-    cachedLeads = allLeads;  // Обновляем кэш
-    lastFetched = Date.now();  // Обновляем время последнего получения данных
+    // Получаем список ответственных пользователей
+    const userIds = [...new Set(allLeads.map(lead => lead.ASSIGNED_BY_ID).filter(id => id))];
+    const users = await fetchUsers(userIds);
+
+    // Добавляем имена ответственных в лиды
+    allLeads = allLeads.map(lead => ({
+        ...lead,
+        ASSIGNED_BY_NAME: users[lead.ASSIGNED_BY_ID] || "Не назначен"
+    }));
+
+    cachedLeads = allLeads;  
+    lastFetched = Date.now();  
     return allLeads;
 };
 
+// Функция для получения списка пользователей (ответственных)
+const fetchUsers = async (userIds) => {
+    if (userIds.length === 0) return {};
+
+    try {
+        const response = await axios.post('https://ac-auto56.bitrix24.ru/rest/191/slva3giogtzqh3fu/user.get.json', {
+            filter: { "ID": userIds },
+            select: ["ID", "NAME", "LAST_NAME"]
+        });
+
+        if (response.data.result) {
+            return response.data.result.reduce((acc, user) => {
+                acc[user.ID] = `${user.NAME} ${user.LAST_NAME}`;
+                return acc;
+            }, {});
+        }
+    } catch (error) {
+        console.error('Ошибка при получении пользователей:', error.message);
+        return {};
+    }
+};
+
+// API endpoint для получения лидов
 app.get('/api/leads', async (req, res) => {
     try {
-        const { status = "", opportunity = "", orderBy = "DATE_CREATE", orderDir = "desc" } = req.query;
-
-        const filter = {};
-        if (status) filter["STATUS_ID"] = status;
-        if (opportunity) filter[">=OPPORTUNITY"] = opportunity;
-
-        const requestData = {
-            filter: filter,
-            select: ["*"],
-            order: {
-                [orderBy]: orderDir,
-            },
-        };
-
-        const allLeads = await fetchLeads(requestData);
+        const allLeads = await fetchLeads();
         res.json(allLeads);
     } catch (error) {
         console.error("Ошибка при запросе к API Битрикс:", error);

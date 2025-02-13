@@ -169,7 +169,50 @@
     height: 50px;
     animation: spin 1s linear infinite;
 }
+.chart-block {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: calc(100% - 3%);
+        margin: auto;
+    padding: 20px;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ddd;
+    gap: 40px;
+}
 
+.chart-container {
+    flex: 1;
+    text-align: center;
+}
+
+.chart-container canvas {
+    max-width: 400px !important;
+    max-height: 400px !important;
+}
+
+.assigned-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+    flex-grow: 1;
+}
+
+.assigned-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.color-box {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+}
 @keyframes spin {
     0% {
         transform: translate(-50%, -50%) rotate(0deg);
